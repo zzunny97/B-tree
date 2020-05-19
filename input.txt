@@ -1,0 +1,20 @@
+i 1
+y
+z
+i 3
+y
+z
+i 5
+y
+z
+i 7
+y
+z
+i 2
+i 4
+i 6
+i 8
+y
+z
+q
+
