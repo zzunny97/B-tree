@@ -1,8 +1,8 @@
 all: 
-	g++ -o driver driver.cpp BTree.cpp
+	g++ -std=c++11 -o driver driver.cpp BTree.cpp
 
 run:
-	g++ -o driver driver.cpp BTree.cpp
+	g++ -std=c++11 -o driver driver.cpp BTree.cpp
 	./driver input2.txt
 
 clean:

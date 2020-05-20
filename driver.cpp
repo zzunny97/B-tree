@@ -20,7 +20,7 @@ int main(int argc, char* argv[]) {
 		switch(command){
 			case 'i':
 				input >> value;
-				cout << "insert " << value << endl;
+				//cout << "insert " << value << endl;
 				bt.insert(value);
 				break;
 			case 's':
@@ -33,7 +33,7 @@ int main(int argc, char* argv[]) {
 				break;
 			case 'd':
 				input >> value;
-				cout << "delete " << value << endl;
+				//cout << "delete " << value << endl;
 				bt.remove(value);
 				break;
 			case 'p':
@@ -44,7 +44,7 @@ int main(int argc, char* argv[]) {
 				bt.printAllLeafNode();
 				break;
 			case 'y':
-				bt.print(bt.root);
+				//bt.print(bt.root);
 				break;
 			case 'q':
 				flag = false;

@@ -1,5 +1,6 @@
 // Please implement most of your source codes here. 
 #include "BTree.h"
+#include <string>
 
 BTreeNode::BTreeNode(NodeType _type) {
 	num_keys = 0;	
@@ -8,6 +9,7 @@ BTreeNode::BTreeNode(NodeType _type) {
 	for(int i=0; i<NUM_KEYS+1; i++) child[i] = NULL;		
 }
 
+/*
 NodeType BTreeNode::getNodeType() {
 	return type;
 }
@@ -18,19 +20,8 @@ string BTreeNode::getNodeType2() {
 	else if(type == LEAF) return "LEAF";
 	return "ERROR";
 }
+*/
 
-bool BTreeNode::can_merge(BTreeNode* sibling) {
-	if(sibling == NULL) return false;
-	int sum_of_keys= num_keys + sibling->num_keys;
-	if(sum_of_keys >= ceil(NUM_KEYS/2) && sum_of_keys <= NUM_KEYS) return true;
-	return false;
-}
-
-bool BTreeNode::can_borrow(BTreeNode* sibling) {
-	if(sibling==NULL) return false;
-	if(sibling->num_keys-1 < ceil((float)(NUM_KEYS)/2)) return false;
-	return true;
-}
 
 BTreeNode* BTreeNode::sibling(bool is_left) {
 	if(parent == NULL) {
@@ -58,21 +49,6 @@ BTreeNode* BTreeNode::sibling(bool is_left) {
 	return NULL;
 }
 
-bool BTreeNode::too_few() {
-	if(type == LEAF) {
-		if(num_keys < ceil((float)(NUM_KEYS)/2)) return true;
-	}
-
-	else if(type == INTERNAL) {
-		int num_ptr = num_keys+1;
-		if(num_ptr < ceil((float)(NUM_KEYS+1)/2)) return true;
-	}
-	else {
-		if(num_keys < 1) return true;
-	}
-	return false;
-}
-
 void BTreeNode::printLeafNode() {
 	for(int i=0; i<num_keys; i++) {
 		cout << keys[i] << " ";
@@ -86,10 +62,6 @@ int BTreeNode::findIndex(long long value) {
 		if(value <= keys[i]) break;
 	}
 	return i;
-}
-
-int BTreeNode::get_child_num() {
-	return num_keys+1;
 }
 
 BTreeNode* BTreeNode::find_last_non_null() {
@@ -138,7 +110,7 @@ void BTree::printAllLeafNode() {
 
 void BTree::printLeafNode(long long value) {
 	BTreeNode* cur = root;
-	while(cur->getNodeType() != LEAF) {
+	while(cur->type != LEAF) {
 		if(depth==1) break;
 		int i = cur->findIndex(value);
 		if(i==cur->num_keys) {
@@ -159,7 +131,14 @@ void BTree::printLeafNode(long long value) {
 	}
 	if(is_found) {
 		for(int i=0; i<cur->num_keys; i++) {
-			cout << cur->keys[i] << ", ";
+			//if(i == cur->num_keys-1)
+			//	cout << cur->keys[i];
+			//else 
+			//cout << cur->keys[i] << ", ";
+			cout << cur->keys[i] ;
+			if(i == cur->num_keys-1)
+				break;
+			cout << ", ";
 		}
 		cout << endl;
 	}
@@ -296,8 +275,15 @@ void BTree::insert(long long value) {
 		BTreeNode* newleaf = new BTreeNode(LEAF);
 		vector<long long> tmp;
 		for(int i=0; i<cur->num_keys; i++)   tmp.push_back(cur->keys[i]);
-		tmp.push_back(value);	
-		sort(tmp.begin(), tmp.end());
+		for(int i=0; i<tmp.size(); i++) {
+			if(value < tmp[i]) {
+				tmp.insert(tmp.begin()+i, value);
+				break;
+			}
+		}
+		if(value > tmp[tmp.size() - 1]) tmp.push_back(value);
+		//tmp.push_back(value);	
+		//sort(tmp.begin(), tmp.end());
 		newleaf->child[NUM_KEYS] = cur->child[NUM_KEYS]; 
 		cur->child[NUM_KEYS] = newleaf;
 		cur->num_keys = 0;
@@ -314,6 +300,7 @@ void BTree::insert(long long value) {
 }
 
 void BTree::borrow(BTreeNode* left, BTreeNode* right, int position, bool n_idx) {
+	/*
 	if(left->parent != right->parent) {
 		cout << "[ERROR]: borrow parent different" << endl;
 		if(left->parent == NULL) cout << "left parent is Null" << endl;
@@ -324,6 +311,7 @@ void BTree::borrow(BTreeNode* left, BTreeNode* right, int position, bool n_idx) 
 		cout << "rhgt: "; right->printLeafNode();
 		exit(1);
 	}
+	*/
 	if(n_idx == 0) {
 		if(left->type != LEAF) {
 			left->keys[left->num_keys] = left->parent->keys[position];
@@ -367,6 +355,7 @@ void BTree::borrow(BTreeNode* left, BTreeNode* right, int position, bool n_idx) 
 }
 
 void BTree::merge(BTreeNode* left, BTreeNode* right, int position) {
+	/*
 	if(left->parent != right->parent) {
 		cout << "[ERROR]: merge parent different" << endl;
 		if(left->parent == NULL) cout << "left parent is Null" << endl;
@@ -377,6 +366,7 @@ void BTree::merge(BTreeNode* left, BTreeNode* right, int position) {
 		cout << "rhgt: "; right->printLeafNode();
 		exit(1);
 	}
+	*/
 	//cout << "MERGE: " << endl;
 	//cout << "left: ";  left->printLeafNode(); cout << "left num_keys: " << left->num_keys << endl;
 	//cout << "right: "; right->printLeafNode(); cout << "right num_keys: " << right->num_keys << endl;
@@ -408,25 +398,9 @@ void BTree::merge(BTreeNode* left, BTreeNode* right, int position) {
 }
 
 void BTree::delete_entry(BTreeNode* n, long long value, int position) {
-
 	BTreeNode* parent = n->parent;
 	long long last_min = n->keys[0];
 
-	/*
-	while(cur->getNodeType() != LEAF) {
-		if(depth==1)  break;
-		int i = cur->findIndex(value);
-		if(i==cur->num_keys) {
-			cur = cur->find_last_non_null();
-		}
-		else if(value == cur->keys[i]) {
-			cur = cur->child[i+1];
-		}
-		else {
-			cur = cur->child[i];
-		}
-	}
-	*/
 
 	//cout << "before delete "; n->printLeafNode();
 	
@@ -457,25 +431,6 @@ void BTree::delete_entry(BTreeNode* n, long long value, int position) {
 		}
 	//}
 	//cout << "after delete "; n->printLeafNode();
-	//n->printLeafNode();
-	
-	/*
-	for(int i=0; i<n->num_keys+1; i++) {
-		if(n->type != LEAF && value < n->keys[i]) {
-			delete_entry(n->child[i], value, i);
-			break;
-		}
-		else if(n->type == LEAF && n->keys[i] == value) {
-			n->printLeafNode();
-			for(int j=i; j<n->num_keys-1; j++) {
-				n->keys[j] = n->keys[j+1];
-			}
-			n->num_keys--;
-			break;
-		}
-	}
-	*/
-	//n->printLeafNode();
 
 	if(n->type == ROOT) {
 		if(n->num_keys == 0 && n->child[0] != NULL) { // only one remaining child
@@ -490,7 +445,7 @@ void BTree::delete_entry(BTreeNode* n, long long value, int position) {
 
 
 
-	if(n->type == LEAF && n->num_keys < NUM_KEYS/2) {
+	if(n->type != ROOT && n->num_keys < NUM_KEYS/2) {
 		BTreeNode* left = n->sibling(true); // get left sibling
 		BTreeNode* right = n->sibling(false); // get right sibling
 		if(left != NULL && left->num_keys-1 >= NUM_KEYS/2) {
@@ -514,27 +469,6 @@ void BTree::delete_entry(BTreeNode* n, long long value, int position) {
 		}
 	}
 
-	else if(n->type == INTERNAL && n->num_keys < NUM_KEYS/2) {
-		BTreeNode* left = n->sibling(true);
-		BTreeNode* right = n->sibling(false);
-		if(left != NULL && left->num_keys-1 >= NUM_KEYS/2) {
-			borrow(left, n, position-1, 1);
-		}
-		else if(right != NULL && right->num_keys-1>=NUM_KEYS/2) {
-			borrow(n, right, position, 0);
-		}
-		else if(left != NULL && left->num_keys + n->num_keys <= NUM_KEYS) {
-			merge(left, n, position);
-
-		}
-		else if(right != NULL && n->num_keys + right->num_keys <= NUM_KEYS) {
-			merge(n, right, position+1);
-		}
-	}
-	else {
-		//cout << "Nothing had done" << endl;
-	}
-
 	BTreeNode* cur = n->parent;
 	while(cur != NULL) {
 		for(int i=0; i<cur->num_keys; i++) {
@@ -551,7 +485,7 @@ void BTree::delete_entry(BTreeNode* n, long long value, int position) {
 
 void BTree::remove(long long value) {
 	BTreeNode* cur = root;
-	while(cur->getNodeType() != LEAF) {
+	while(cur->type != LEAF) {
 		if(depth==1)  break;
 		int i = cur->findIndex(value);
 		if(i==cur->num_keys) {
@@ -576,18 +510,18 @@ void BTree::remove(long long value) {
 		delete_entry(root, value, 0);
 	}
 	else {
-		cout << "No such key" << endl;
+		//cout << "No such key" << endl;
 		return;
 	}
 }
 
 void BTree::pointQuery(long long value) {
 	BTreeNode* cur = root;
-	while(cur->getNodeType() != LEAF) {
+	while(cur->type != LEAF) {
 		if(depth==1) break;
 		int i = cur->findIndex(value);
 		if(i==cur->num_keys) {
-			cur = cur->find_last_non_null();	
+			cur = cur->find_last_non_null();
 		}
 		else if(value == cur->keys[i]) {
 			cur = cur->child[i+1];
@@ -608,7 +542,7 @@ void BTree::pointQuery(long long value) {
 
 void BTree::rangeQuery(long long low, long long high) {
 	BTreeNode* cur = root;
-	while(cur->getNodeType() != LEAF) {
+	while(cur->type != LEAF) {
 		if(depth==1) break;
 		int i = cur->findIndex(low);
 		if(i==cur->num_keys) {
@@ -627,13 +561,15 @@ void BTree::rangeQuery(long long low, long long high) {
 	}
 	if(i==cur->num_keys) i = 1 + cur->num_keys;
 	bool done = false;
+	string ans = "";
 	while(!done) {
 		int n = cur->num_keys;
-		if(i<n && cur->keys[i] <= high) {
-			cout << cur->keys[i] << ", ";
+		if(i<n && cur->keys[i] < high) {
+			ans.append(to_string(cur->keys[i]) + ", ");
+			//cout << cur->keys[i] << ", ";
 			i++;
 		}
-		else if(i<n && cur->keys[i] > high) {
+		else if(i<n && cur->keys[i] >= high) {
 			done = true;
 		}
 		else if(i>=n && cur->child[NUM_KEYS] != NULL) {
@@ -644,7 +580,7 @@ void BTree::rangeQuery(long long low, long long high) {
 			done = true;
 		}
 	}
-	cout << endl;
+	cout << ans.substr(0, ans.length() -2) << endl;
 }
 
 

@@ -2,14 +2,13 @@
 #include <cstdlib>
 #include <cmath>
 #include <vector>
-#include <algorithm>
 
 using namespace std;
 
 // Note: You need to add additional member variables and functions as you need.
 
 //#define NUM_KEYS 10 
-#define NUM_KEYS 4
+#define NUM_KEYS 10
 // NUM_KEYS should be set to make each tree node as large as 4KB. 
 // But for this assignment, we will set the degree of node to 10 just to make debugging and grading easy
 // Please do not change this number. 
@@ -23,33 +22,30 @@ enum NodeType {
 };
 
 class BTreeNode {   
-	public:
+	private:
 		long long keys[NUM_KEYS];
 		int num_keys;
 		BTreeNode* parent;
 		BTreeNode* child[NUM_KEYS+1];
 		NodeType type;
-
-
+	public:
 		BTreeNode(NodeType _type);
 		~BTreeNode() {}
-		NodeType getNodeType();
-		string getNodeType2();
-		bool can_merge(BTreeNode* sibling);
-		bool can_borrow(BTreeNode* sibling);
+		//NodeType getNodeType();
+		//string getNodeType2();
 		BTreeNode* sibling(bool is_left);
-		bool too_few();
 		void printLeafNode();
 		int findIndex(long long value);
 		int get_child_num();
 		BTreeNode* find_last_non_null();
+	friend class BTree;
 };
 
 class BTree {  
 	private:
 		int depth;
-	public:
 		BTreeNode *root;
+	public:
 		// You are not allowed to change the interfaces of these public methods.
 		BTree() {
 			root = new BTreeNode(ROOT);
@@ -66,7 +62,6 @@ class BTree {
 
 		void borrow(BTreeNode* left, BTreeNode* right, int position, bool n_idx);
 		void merge(BTreeNode* left, BTreeNode* right, int position);
-
 		void delete_entry(BTreeNode* n, long long value, int position);
 		void remove(long long value);
 
@@ -74,7 +69,10 @@ class BTree {
 		void printAllLeafNode();
 
 
-		void printLeafNode(long long value); // find the leaf node that contains 'value' and print all values in the leaf node.
+		void printLeafNode(long long value); 
+		// find the leaf node that contains 'value' and print all values in the leaf node.
 		void pointQuery(long long value);
+		// print the found value or "NOT FOUND" if there is no value in the index
 		void rangeQuery(long long low, long long high);
+		// print all found key (low <= keys < high), seperated by comma
 };
